@@ -1,0 +1,17 @@
+@layer theme {
+  .theme-light {
+    --color-bg: #ffffff;
+    --color-text: #111111;
+    --color-muted: #666666;
+    --color-primary: #ff9900;
+    --color-border: #e5e7eb;
+  }
+
+  .theme-dark {
+    --color-bg: #0e0e0e;
+    --color-text: #f9f9f9;
+    --color-muted: #9ca3af;
+    --color-primary: #ff9900;
+    --color-border: #2d2d2d;
+  }
+}

@@ -1,0 +1,27 @@
+---
+import { Image } from "astro:assets";
+import { ChefcloudIcon } from "../../assets/icons";
+
+const { name, logo, theme } = Astro.props;
+---
+
+<header class={`w-full px-0 py-6 theme-${theme ?? "dark"}`}>
+  <div class="max-w-4xl mx-auto flex justify-between">
+    <ul class="flex items-center gap-3">
+      <li class="h-8 max-w-[80px] flex items-center">
+        <Image
+          width={1000}
+          height={1000}
+          src={logo}
+          alt="Logo del restaurante"
+          class="object-contain h-full w-auto"
+          decoding="async"
+          loading="lazy"
+        />
+        <!-- <Image  width={1000} height={1000} src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQ8VkGvAc_c-QLR4OY32HN85iXsR79V_HdMQ&s" alt="Logo del restaurante" class="object-contain h-full w-auto" /> -->
+      </li>
+      <li><h3 class="text-white text-xl font-semibold">|</h3></li>
+      <li><ChefcloudIcon /></li>
+    </ul>
+  </div>
+</header>
