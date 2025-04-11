@@ -1,23 +1,31 @@
 ---
 export const prerender = false;
 
+import MenuCard from "../../components/menu/MenuCard.astro";
 import Layout from "../../layouts/Layout.astro";
 import Header from "../../components/header/Header.astro";
+import BottomCategoryNav from "../../components/menu/BottomCategoryNav.astro";
 import { getMenuBySlug } from "../../services/menu.service";
 import type { MenuResponse } from "../../types/menu";
+import { menuCache } from "../../utils/cache";
 
 const { slug } = Astro.params;
+if (!slug) throw new Error("Falta el parámetro 'slug' en la ruta.");
 
-let data: MenuResponse | null = null;
 let theme: string = "dark";
+let data: MenuResponse | null = menuCache.get(slug) ?? null;
 
-try {
-  data = await getMenuBySlug(slug as string);
-  if (data?.theme && typeof data.theme === "string") {
-    theme = data.theme;
+if (!data) {
+  try {
+    data = await getMenuBySlug(slug);
+    menuCache.set(slug, data);
+  } catch (err) {
+    console.error("Error cargando datos del menú:", err);
   }
-} catch (err) {
-  console.error("Error cargando datos del menú:", err);
+}
+
+if (data?.theme && typeof data.theme === "string") {
+  theme = data.theme;
 }
 ---
 
@@ -26,57 +34,51 @@ try {
     <div class="text-center py-10 text-red-600 font-bold">
       Restaurante no encontrado o error de conexión.
     </div>
-  ) : data.redirectToAll ? (
-    // ✅ Solo tiene 1 menú → mostrar todo
+  ) : (
     <Layout theme={theme} title={`${data.name} | Chefcloud`}>
       <Header name={data.name} logo={data.logo} theme={theme} />
 
-      <main class="max-w-5xl mx-auto p-4">
+      <main
+        id="menu-scroll-container"
+        class="relative max-w-5xl mx-auto px-4 pb-20 pt-12"
+      >
         {data.menus?.map((menu) => (
-          <section class="mb-8">
-            <h2 class="text-xl font-semibold mb-2">{menu.name}</h2>
-            {menu.categories.map((category) => (
-              <div class="mb-4">
-                <h3 class="text-lg font-medium text-skin-primary mb-1">
-                  {category.name}
-                </h3>
-                <ul class="space-y-2">
-                  {category.items.map((item) => (
-                    <li class="border-b pb-2">
-                      <div class="flex justify-between">
-                        <span>{item.name}</span>
-                        <span>${item.price}</span>
-                      </div>
-                      <p class="text-sm text-gray-500">{item.description}</p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+          <section>
+            {menu.categories.map((category) => {
+              const catId = category.name.toLowerCase().replace(/\s+/g, "-");
+              return (
+                <div class="mb-4 scroll-mt-14" id={catId}>
+                  <h1 class="py-6 text-theme-title" data-category-title>
+                    {category.name}
+                  </h1>
+                  <ul class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {category.items.map((item) => (
+                      <MenuCard {...item} />
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </section>
         ))}
       </main>
-    </Layout>
-  ) : (
-    // ✅ Tiene múltiples menús → mostrar sucursales
-    <Layout theme={theme} title={`${data.name} | Chefcloud`}>
-      <Header name={data.name} theme={theme} />
 
-      <main class="max-w-3xl mx-auto p-6 text-center">
-        <h2 class="text-2xl font-semibold mb-6">Selecciona una sucursal</h2>
-        <ul class="space-y-4">
-          {data.branches?.map((branch) => (
-            <li>
-              <a
-                href={`/${data.slug}/${branch.slug}`}
-                class="inline-block px-4 py-2 bg-skin-primary text-white rounded hover:opacity-80 transition"
-              >
-                {branch.name}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </main>
+      <BottomCategoryNav
+        categories={
+          data.menus
+            ?.flatMap((menu) => menu.categories)
+            ?.map((cat) => ({
+              id: cat.name.toLowerCase().replace(/\s+/g, "-"),
+              name: cat.name,
+            })) ?? []
+        }
+      />
     </Layout>
   )
 }
+
+<style>
+  @reference "../../styles/global.css";
+</style>
+
+<script is:inline type="module" src="/src/scripts/scrollspy.js"></script>

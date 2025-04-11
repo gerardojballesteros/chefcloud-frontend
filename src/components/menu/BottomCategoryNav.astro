@@ -1,0 +1,47 @@
+---
+// src/components/menu/BottomCategoryNav.astro
+export interface Category {
+  id: string;
+  name: string;
+}
+export interface Props {
+  categories: Category[];
+}
+const { categories } = Astro.props;
+---
+
+<nav
+  id="menu"
+  class="fixed bottom-6 left-4 md:right-4 rounded-l-lg md:rounded-lg inset-x-0 bg-theme-bg-blur backdrop-blur-md z-40 border-category-bottom
+scroll-fast no-scrollbar max-w-5xl mx-auto"
+>
+  <ul class="flex gap-4 px-4 py-[10px] whitespace-nowrap no-scrollbar">
+    {
+      categories?.map((cat) => (
+        <li id={`link-${cat.id}`} class="shrink-1 last:pr-4">
+          <a
+            href={`#${cat.id}`}
+            class="nav-link text-theme-title text-sm font-bold text-white transition-opacity hover:opacity-100"
+            data-category-link={cat.id}
+          >
+            {cat.name.toUpperCase()}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .nav-link.active {
+    color: var(--color-primary-title);
+    opacity: 1 !important;
+  }
+</style>

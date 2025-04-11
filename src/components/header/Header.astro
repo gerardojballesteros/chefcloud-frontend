@@ -5,23 +5,56 @@ import { ChefcloudIcon } from "../../assets/icons";
 const { name, logo, theme } = Astro.props;
 ---
 
-<header class={`w-full px-0 py-6 theme-${theme ?? "dark"}`}>
-  <div class="max-w-4xl mx-auto flex justify-between">
-    <ul class="flex items-center gap-3">
-      <li class="h-8 max-w-[80px] flex items-center">
-        <Image
+<header
+  id="sticky-header"
+  class={`w-full theme-${theme ?? "dark"} transition-transform duration-300 ease-in-out fixed top-0 left-0 z-50 bg-theme-bg-blur backdrop-blur-lg`}
+  style={{ borderBottom: "1px solid var(--color-border-header)" }}
+>
+  <div
+    class="max-w-5xl mx-auto px-4 h-[48px] flex items-center justify-between"
+  >
+    <ul class="flex items-center gap-2">
+      <li class="h-5 max-w-[84px] flex items-center">
+        <img
           width={1000}
           height={1000}
           src={logo}
           alt="Logo del restaurante"
           class="object-contain h-full w-auto"
-          decoding="async"
-          loading="lazy"
         />
-        <!-- <Image  width={1000} height={1000} src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQ8VkGvAc_c-QLR4OY32HN85iXsR79V_HdMQ&s" alt="Logo del restaurante" class="object-contain h-full w-auto" /> -->
+        <!-- <Image
+          width={100}
+          height={100}
+          src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQ8VkGvAc_c-QLR4OY32HN85iXsR79V_HdMQ&s"
+          alt="Logo del restaurante"
+          class="object-contain h-full w-auto"
+        /> -->
       </li>
       <li><h3 class="text-white text-xl font-semibold">|</h3></li>
       <li><ChefcloudIcon /></li>
     </ul>
+    <!-- <h3>idioma</h3> -->
   </div>
 </header>
+
+<script>
+  const header = document.getElementById("sticky-header");
+
+  if (header) {
+    let lastScrollY = window.scrollY;
+
+    window.addEventListener("scroll", () => {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > lastScrollY && currentScrollY > 20) {
+        // Scroll hacia abajo → ocultar header
+        header.style.transform = "translateY(-100%)";
+      } else {
+        // Scroll hacia arriba → mostrar header
+        header.style.transform = "translateY(0)";
+      }
+
+      lastScrollY = currentScrollY;
+    });
+  }
+</script>

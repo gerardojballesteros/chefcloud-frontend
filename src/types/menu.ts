@@ -27,7 +27,5 @@ export interface MenuResponse {
     name: string;
     slug: string;
   }>;
-
-  // 🔽 Campo clave para el renderizado condicional
   redirectToAll?: boolean;
 }
