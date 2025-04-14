@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("astro:page-load", () => {
   const sections = document.querySelectorAll(
     "main#menu-scroll-container > section > div[id]",
   );

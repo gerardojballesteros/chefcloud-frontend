@@ -1,20 +1,33 @@
 ---
-const { name, description, price, image } = Astro.props;
+import FavButton from "../ui/FavButton";
+
+const { name, description, price, image, index } = Astro.props;
+const slug = Astro.url.pathname.split("/")[1];
+
+const slugify = (str: string) =>
+  str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+
+const encodedName = slugify(name);
+const transitionId = `img-${encodedName}`;
 ---
 
-<li
-  class="flex items-center justify-between gap-4 p-4 w-full h-[140px] md:h-[160px] rounded-2xl shadow-md border-card bg-card max-h-[160px]"
+<a
+  href={`/${slug}/${encodedName}`}
+  onclick="sessionStorage.setItem('scrollPosition', window.scrollY); sessionStorage.setItem('fromDetail', 'true');"
+  class="flex items-center justify-between gap-4 p-4 w-full h-[140px] md:h-[160px] rounded-2xl shadow-md border-card bg-card max-h-[160px] cursor-pointer"
 >
-  <div
-    class="flex flex-col justify-between flex-1 align-item sm:h-[100px] md:h-[114px]"
-  >
-    <h3 class="clamp-1">{name}</h3>
-
+  <div class="flex flex-col justify-between flex-1 sm:h-[100px] md:h-[114px]">
+    <h3 class="clamp-1" transition:name={`title-${encodedName}`}>
+      {name}
+    </h3>
     <p class="text-sm mt-1 mb-1 clamp-2 text-skin-muted leading-snug">
       {description}
     </p>
-
-    <h3 class="">
+    <h3>
       {
         new Intl.NumberFormat("es-CL", {
           style: "currency",
@@ -24,26 +37,31 @@ const { name, description, price, image } = Astro.props;
     </h3>
   </div>
 
-  {
-    image && (
-      <img
-        src={image}
-        alt={name}
-        class=" w-28 h-28 md:w-34 md:h-34  object-cover rounded-xl text-theme-primary"
-      />
-    )
-  }
-</li>
+  <div class="relative h-28 md:h-34">
+    {
+      image && (
+        <img
+          src={image}
+          alt={name}
+          class="w-28 h-28 md:w-34 md:h-34 object-cover rounded-xl text-theme-primary"
+          transition:name={transitionId}
+        />
+      )
+    }
+    <div
+      class="absolute h-30 top-1 right-1 w-full flex justify-end items-start"
+    >
+      <FavButton name={name} detailPage={false} client:load />
+    </div>
+  </div>
+</a>
 
 <style>
-  @reference "../../styles/global.css";
-
   .clamp-1 {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 1;
     overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .clamp-2 {
@@ -51,16 +69,14 @@ const { name, description, price, image } = Astro.props;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
     overflow: hidden;
-    text-overflow: ellipsis;
   }
-  @layer components {
-    li {
-      @apply transition-all duration-200;
-    }
 
-    li:hover {
-      @apply shadow-lg;
-    }
+  li {
+    transition: all 0.2s;
+  }
+
+  li:hover {
+    box-shadow: var(--shadow-lg);
   }
 
   .bg-card {

@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 const { theme = "dark", title = "Chefcloud" } = Astro.props;
+import { ClientRouter } from "astro:transitions";
 ---
 
 <html lang="es" class={`theme-${theme}`}>
@@ -9,9 +10,21 @@ const { theme = "dark", title = "Chefcloud" } = Astro.props;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title}</title>
+    <ClientRouter />
   </head>
   <body>
     <slot />
-  </body>
-  <script is:inline type="module" src="/menu-refresh.js"></script>
+  </body><script is:inline type="module" src="/menu-refresh.js"></script>
+  <script is:inline type="module" src="/scrollspy.js"></script>
 </html>
+
+<script is:inline>
+  document.addEventListener("astro:before-swap", (e) => {
+    // console.log("🔁 Navigating FROM:", window.location.pathname);
+    // console.log("🔜 Navigating TO:", e.to?.pathname);
+  });
+
+  document.addEventListener("astro:after-swap", () => {
+    // console.log("✅ Page rendered:", window.location.pathname);
+  });
+</script>

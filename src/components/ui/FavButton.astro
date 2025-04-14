@@ -1,0 +1,121 @@
+---
+// components/ui/FavButton.astro
+import HeartsIcon from "../../assets/icons/heartsIconDetail.astro";
+
+const { name } = Astro.props;
+if (!name) throw new Error("El prop 'name' es requerido en FavButton");
+
+const slugify = (str: string) =>
+  str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+
+const id = slugify(name);
+---
+
+<button
+  class="fav-btn"
+  data-id={id}
+  data-detail="true"
+  aria-label="Agregar a favoritos"
+  type="button"
+>
+  <HeartsIcon size={18} detailPage={false} />
+  <span class="heart-effect">❤️</span>
+</button>
+
+<style>
+  .fav-btn {
+    position: relative;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    color: transparent; /* color por defecto */
+  }
+
+  .fav-btn[data-fav="true"] {
+    color: red;
+  }
+
+  .fav-btn[data-fav="false"] {
+    color: transparent;
+  }
+  .heart-effect {
+    position: absolute;
+    right: 0;
+    left: 50%;
+    transform: translate(50%, -50%) scale(0);
+    font-size: 18px;
+    color: red;
+    pointer-events: none;
+    opacity: 0;
+    animation: none;
+  }
+
+  .fav-btn.animate .heart-effect {
+    animation: float-heart 0.6s ease-out forwards;
+  }
+
+  @keyframes float-heart {
+    0% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: translate(-50%, -80%) scale(1.6);
+      opacity: 0.9;
+    }
+    100% {
+      transform: translate(-50%, -130%) scale(0.6);
+      opacity: 0;
+    }
+  }
+</style>
+
+<script is:inline>
+  function initFavButtons() {
+    const STORAGE_KEY = "chefcloud_favs";
+
+    document.querySelectorAll(".fav-btn").forEach((btn) => {
+      const id = btn.getAttribute("data-id");
+      if (!id) return;
+
+      let favs = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      let isFav = favs.includes(id);
+      btn.setAttribute("data-fav", String(isFav));
+
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (isFav) {
+          favs = favs.filter((f) => f !== id);
+          isFav = false;
+        } else {
+          if (!favs.includes(id)) favs.push(id);
+          isFav = true;
+
+          // Si tiene clase animate, es del listado
+          btn.classList.add("animate");
+          setTimeout(() => btn.classList.remove("animate"), 600);
+        }
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
+        btn.setAttribute("data-fav", String(isFav));
+      });
+    });
+  }
+
+  initFavButtons();
+
+  // 🔁 Volver a ejecutar si usas navegación SPA (Astro Islands / transición entre rutas)
+  document.addEventListener("astro:after-swap", initFavButtons);
+</script>

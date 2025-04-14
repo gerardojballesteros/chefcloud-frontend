@@ -1,0 +1,248 @@
+---
+import { getMenuBySlug } from "../../services/menu.service";
+import Layout from "../../layouts/Layout.astro";
+import type { MenuResponse } from "../../types/menu";
+import { menuCache } from "../../utils/cache";
+import ArrowLeft from "../../assets/icons/arrowLeft.astro";
+import { ShareIcon } from "../../assets/icons";
+import FavButton from "../../components/ui/FavButton.astro";
+
+const { slug, name } = Astro.params;
+
+const slugify = (str: string) =>
+  str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+
+const cleanParamName = slugify(name ?? "");
+const transitionId = `img-${cleanParamName}`;
+
+let data: MenuResponse | null = slug ? (menuCache.get(slug) ?? null) : null;
+
+if (!data) {
+  try {
+    data = slug ? await getMenuBySlug(slug) : null;
+    if (slug && data) {
+      menuCache.set(slug, data);
+    }
+  } catch (err) {
+    console.error("Error al cargar los datos del menú:", err);
+  }
+}
+
+const item = data?.menus
+  ?.flatMap((menu) => menu.categories)
+  .flatMap((cat) => cat.items)
+  .find((i) => slugify(i.name) === cleanParamName);
+
+if (!item) {
+  throw new Error("Ítem no encontrado.");
+}
+
+const theme = data?.theme ?? "dark";
+
+const category = data?.menus
+  ?.flatMap((menu) => menu.categories)
+  .find((cat) => cat.items.some((i) => slugify(i.name) === cleanParamName));
+---
+
+<Layout theme={theme} title={`${item.name} | ${data?.name ?? "Chefcloud"}`}>
+  <main class="wrapper">
+    {
+      data?.theme === "dark" && (
+        <div
+          class="fixed inset-x-0 top-0 h-[100dvh] z-0 pointer-events-none"
+          style="background: radial-gradient(circle at 50% 0%, rgba(194, 172, 255, 0.088), transparent 90%);"
+        />
+      )
+    }
+    {
+      item.image && (
+        <div class="img-product" transition:name={transitionId}>
+          <img src={item.image} alt={item.name} />
+          <div class="go-back">
+            <a href={`/${slug}`}>
+              <div class="circle">
+                <ArrowLeft color="black" size={14} />
+              </div>
+            </a>
+          </div>
+        </div>
+      )
+    }
+
+    <div class="container">
+      <div class="nav-share flex justify-between items-center mb-5">
+        <h4>{category?.name}</h4>
+        <div class="box flex">
+          <div class="circle-2">
+            <FavButton name={item.name} />
+          </div>
+
+          <a href={`/${slug}`}>
+            <div class="circle-2">
+              <ShareIcon color="black" base="" size={18} />
+            </div>
+          </a>
+        </div>
+      </div>
+      <h1 class="flex" transition:name={`title-${cleanParamName}`}>
+        {
+          !item.image && (
+            <a href={`/${slug}`}>
+              <div class="circle-2">
+                <ArrowLeft color="black" size={14} />
+              </div>
+            </a>
+          )
+        }
+        {item.name}
+      </h1>
+
+      <p class="text-base/6 leading-[1.2] mt-2 mb-2">{item.description}</p>
+      <h3 class="price">
+        {
+          new Intl.NumberFormat("es-CL", {
+            style: "currency",
+            currency: "CLP",
+          }).format(item.price)
+        }
+      </h3>
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .wrapper {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    max-width: 64rem;
+    margin: 0 auto;
+    overflow-x: hidden;
+  }
+
+  .img-product {
+    position: relative;
+    width: 100%;
+    height: auto;
+    margin-bottom: 1rem;
+  }
+
+  .img-product img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .container {
+    position: relative;
+    width: 100%;
+    height: auto;
+    padding: 1rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    text-decoration: underline;
+  }
+
+  .title {
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+
+  .description {
+    margin-bottom: 1rem;
+    font-size: 1.125rem;
+    color: var(--color-muted);
+  }
+
+  .price {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+
+  .go-back {
+    position: absolute;
+    width: 100%;
+    height: 70px;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+  }
+
+  .go-back .circle {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: var(--color-bg-button);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
+  }
+
+  .circle-2 {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background-color: var(--color-bg-button);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: var(--shadow-lg);
+    cursor: pointer;
+    margin-right: 10px;
+  }
+
+  /* TABLET */
+  @media (min-width: 668px) {
+    .wrapper {
+      display: flex;
+      align-items: center;
+      height: 100dvh;
+      padding: 0 20px;
+    }
+    .container {
+      position: relative;
+      height: 400px;
+      margin: 0 auto;
+    }
+
+    .img-product img {
+      height: 400px;
+      margin-inline: auto;
+      border-radius: 20px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--color-border-card);
+    }
+  }
+
+  /* DESKTOP */
+  @media (min-width: 1024px) {
+    .container {
+      position: relative;
+      max-width: 768px;
+      height: 400px;
+    }
+
+    .title {
+      font-size: 2rem;
+    }
+
+    .price {
+      font-size: 2rem;
+    }
+  }
+</style>

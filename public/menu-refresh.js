@@ -1,4 +1,4 @@
-console.log("🧠 menu-refresh.js activo");
+// console.log("🧠 menu-refresh.js activo");
 
 if (window.location.pathname.split("/").length > 1) {
   const slug = window.location.pathname.split("/")[1];
@@ -13,7 +13,7 @@ if (window.location.pathname.split("/").length > 1) {
         const { slug: updatedSlug } = JSON.parse(event.data);
         if (updatedSlug !== slug) return;
 
-        console.log("🔁 Detected menu update. Reloading...");
+        // console.log("🔁 Detected menu update. Reloading...");
 
         await fetch("/api/cache/refresh", {
           method: "POST",

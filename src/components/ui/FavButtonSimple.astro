@@ -1,0 +1,139 @@
+---
+const { name } = Astro.props;
+if (!name) throw new Error("El prop 'name' es requerido en FavButton");
+
+const slugify = (str: string) =>
+  str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, "-");
+
+const id = slugify(name);
+---
+
+<button
+  class="fav-btn"
+  data-id={id}
+  data-detail="true"
+  aria-label="Agregar a favoritos"
+  type="button"
+  style="opacity: 0;"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 14 13"
+    class="heart-svg"
+  >
+    <path
+      d="M8.81803 10.9983L8.81746 10.9987C8.4498 11.2879 8.12003 11.5429 7.80182 11.728C7.48349 11.9133 7.22367 12 7 12C6.77645 12 6.51667 11.9132 6.19818 11.7279C5.87979 11.5426 5.55002 11.2878 5.18207 10.999C4.9784 10.8391 4.77092 10.6798 4.56206 10.5194C3.68444 9.84555 2.78254 9.15304 2.03757 8.31778C1.13245 7.30296 0.5 6.11747 0.5 4.57934C0.5 3.07266 1.35496 1.80668 2.52589 1.2737C3.66585 0.75482 5.19362 0.895191 6.64046 2.3923L7 2.76433L7.35954 2.3923C8.80632 0.895249 10.3341 0.755163 11.474 1.27428C12.645 1.80752 13.5 3.07373 13.5 4.58003C13.5 6.11784 12.8677 7.30333 11.9627 8.31804C11.2165 9.15469 10.3126 9.84816 9.43335 10.5227C9.22607 10.6817 9.02017 10.8397 8.81803 10.9983Z"
+      fill="currentColor"
+      stroke="white"></path>
+  </svg>
+
+  <span class="heart-effect">❤️</span>
+</button>
+
+<style>
+  .fav-btn {
+    position: relative;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    /* color por defecto */
+    color: transparent;
+  }
+
+  .fav-btn[data-fav="true"] {
+    color: red;
+  }
+
+  .fav-btn[data-fav="false"] {
+    color: transparent;
+  }
+
+  .heart-effect {
+    position: absolute;
+    right: 0;
+    left: 50%;
+    transform: translate(50%, -50%) scale(0);
+    font-size: 18px;
+    color: red;
+    pointer-events: none;
+    opacity: 0;
+    animation: none;
+  }
+
+  .fav-btn.animate .heart-effect {
+    animation: float-heart 0.6s ease-out forwards;
+  }
+
+  @keyframes float-heart {
+    0% {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: translate(-50%, -80%) scale(1.6);
+      opacity: 0.9;
+    }
+    100% {
+      transform: translate(-50%, -130%) scale(0.6);
+      opacity: 0;
+    }
+  }
+</style>
+
+<script is:inline>
+  function initFavButtons() {
+    const STORAGE_KEY = "chefcloud_favs";
+
+    document.querySelectorAll(".fav-btn").forEach((btn) => {
+      const id = btn.getAttribute("data-id");
+      if (!id) return;
+
+      // Leer la lista de favoritos desde localStorage
+      let favs = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+      let isFav = favs.includes(id);
+
+      // Establecer el estado inicial del botón
+      btn.setAttribute("data-fav", String(isFav));
+
+      // Hacemos visible el botón solo después de asignar el estado correcto
+      btn.style.opacity = "1";
+
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (isFav) {
+          favs = favs.filter((f) => f !== id);
+          isFav = false;
+        } else {
+          if (!favs.includes(id)) favs.push(id);
+          isFav = true;
+
+          btn.classList.add("animate");
+          setTimeout(() => btn.classList.remove("animate"), 600);
+        }
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
+        btn.setAttribute("data-fav", String(isFav));
+      });
+    });
+  }
+
+  // Inicialización en el momento lo más temprano posible
+  initFavButtons();
+
+  // Reinicializar si hay navegación SPA (Astro Islands / transiciones)
+  document.addEventListener("astro:after-swap", initFavButtons);
+</script>
